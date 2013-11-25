@@ -1,6 +1,6 @@
 <?php
 
-
+namespace Ipf\BeAcl\User;
 /***************************************************************
  *  Copyright notice
  *
@@ -23,13 +23,16 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use \TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Backend ACL - Functions re-calculating permissions
  *
  * @author  Sebastian Kurfuerst <sebastian@typo3.org>
  */
-
-class tx_beacl_userAuthGroup {
+class AuthGroup {
 
 	/**
 	 * Returns a combined binary representation of the current users permissions for the page-record, $row.
@@ -50,7 +53,7 @@ class tx_beacl_userAuthGroup {
 			$out = 0;
 		}
 
-		$rootLine = t3lib_BEfunc::BEgetRootLine($row['uid']);
+		$rootLine = BackendUtility::BEgetRootLine($row['uid']);
 
 		$i = 0;
 		$takeUserIntoAccount = 1;
@@ -107,7 +110,7 @@ class tx_beacl_userAuthGroup {
 		$filename = $fileCachePath . 'ppc_' . md5($that->user['uid'] . $params['perms']) . ',cache';
 		// Check if we can return something from cache
 		if (file_exists($filename)) {
-			return t3lib_div::getURL($filename);
+			return GeneralUtility::getURL($filename);
 		}
 
 
@@ -197,9 +200,9 @@ class tx_beacl_userAuthGroup {
 				} else {
 					$this->aclTraversePageTree($singleAllow['pid']);
 				}
-			} // foreach
-		} // if($aclAllowed)
-	} // function getPagePermsClause_single
+			}
+		}
+	}
 
 	/**
 	 * traverses page tree and handles "disallow" ACLs
@@ -251,7 +254,7 @@ class tx_beacl_userAuthGroup {
 	 */
 	public function processDatamap_afterDatabaseOperations($status, $table, $id, &$fieldArray, &$pObj) {
 		$beAclConfig = $this->getConfig();
-		$tables = t3lib_div::trimExplode(',', $beAclConfig['tablesForCacheClear'], TRUE);
+		$tables = GeneralUtility::trimExplode(',', $beAclConfig['tablesForCacheClear'], TRUE);
 		if (in_array($table, $tables)) {
 			$this->clearBeaAclCache();
 		}
@@ -269,7 +272,7 @@ class tx_beacl_userAuthGroup {
 	 */
 	public function processCmdmap_postProcess($command, $table, $id, $value, &$pObj) {
 		$beAclConfig = $this->getConfig();
-		$tables = t3lib_div::trimExplode(',', $beAclConfig['tablesForCacheClear'], TRUE);
+		$tables = GeneralUtility::trimExplode(',', $beAclConfig['tablesForCacheClear'], TRUE);
 		if ($command == 'delete' && in_array($table, $tables)) {
 			$this->clearBeaAclCache();
 		}

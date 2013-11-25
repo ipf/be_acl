@@ -27,6 +27,7 @@ namespace Ipf\BeAcl\Xclass;
 
 use \TYPO3\CMS\Backend\Utility\BackendUtility;
 use \TYPO3\CMS\Core\Utility\GeneralUtility;
+use \TYPO3\CMS\Backend\Utility\IconUtility;
 
 /**
  * Backend ACL - Replacement for "web->Access"
@@ -59,7 +60,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			$disableOldPermissionSystem = 0;
 		}
 
-		$LANG->includeLLFile('EXT:be_acl/res/locallang_perm.php');
+		$LANG->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
 		// Get usernames and groupnames: The arrays we get in return contains only 1) users which are members of the groups of the current user, 2) groups that the current user is member of
 		$groupArray = $BE_USER->userGroupsUID;
 		$be_user_Array = BackendUtility::getUserNames();
@@ -77,7 +78,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		$this->content .= $this->doc->spacer(5);
 
 		// Initialize tree object:
-		$tree = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('t3lib_pageTree');
+		$tree = GeneralUtility::makeInstance('t3lib_pageTree');
 		$tree->init('AND ' . $this->perms_clause);
 
 		$tree->addField('perms_user', 1);
@@ -310,23 +311,23 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			$disableOldPermissionSystem = 0;
 		}
 
-		$LANG->includeLLFile('EXT:be_acl/res/locallang_perm.php');
+		$LANG->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
 
 		// Get usernames and groupnames
-		$be_group_Array = t3lib_BEfunc::getListGroupNames('title,uid');
+		$be_group_Array = BackendUtility::getListGroupNames('title,uid');
 		$groupArray = array_keys($be_group_Array);
 
-		$be_user_Array = t3lib_BEfunc::getUserNames();
-		if (!$GLOBALS['BE_USER']->isAdmin()) $be_user_Array = t3lib_BEfunc::blindUserNames($be_user_Array, $groupArray, 1);
-		$be_group_Array_o = $be_group_Array = t3lib_BEfunc::getGroupNames();
-		if (!$GLOBALS['BE_USER']->isAdmin()) $be_group_Array = t3lib_BEfunc::blindGroupNames($be_group_Array_o, $groupArray, 1);
+		$be_user_Array = BackendUtility::getUserNames();
+		if (!$GLOBALS['BE_USER']->isAdmin()) $be_user_Array = BackendUtility::blindUserNames($be_user_Array, $groupArray, 1);
+		$be_group_Array_o = $be_group_Array = BackendUtility::getGroupNames();
+		if (!$GLOBALS['BE_USER']->isAdmin()) $be_group_Array = BackendUtility::blindGroupNames($be_group_Array_o, $groupArray, 1);
 		$firstGroup = $groupArray[0] ? $be_group_Array[$groupArray[0]] : ''; // data of the first group, the user is member of
 
 
 		// set JavaScript
 		$subPagesData = '';
 		// generate list if record is available on subpages, if yes, enter the id
-		$this->content .= '<script src="../../../' . t3lib_extMgm::extRelPath('be_acl') . 'Resources/Public/JavaScript/acl.js" type="text/javascript">
+		$this->content .= '<script src="../../../' . \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('be_acl') . 'Resources/Public/JavaScript/acl.js" type="text/javascript">
 			' . $subPagesData . '
 		</script>';
 
@@ -467,7 +468,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 						<input type="hidden" name="' . $acl_prefix . '[recursive]" value="0" />
 						<input type="checkbox" name="' . $acl_prefix . '[recursive]" value="1" ' . ($result['recursive'] ? 'checked="checked"' : '') . ' />
 					</td>
-					<td><a href="#" onClick="deleteACL(' . $result['uid'] . ')"><img ' . t3lib_iconWorks::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $LANG->getLL('delAcl', 1) . '" /></a></td>
+					<td><a href="#" onClick="deleteACL(' . $result['uid'] . ')"><img ' . IconUtility::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $LANG->getLL('delAcl', 1) . '" /></a></td>
 				</tr>';
 		}
 
@@ -476,8 +477,8 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			</table>
 			<br />
 			<span id="insertHiddenFields"></span>
-			<img ' . t3lib_iconWorks::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $LANG->getLL('delAcl', 1) . '" / id="templateDeleteImage" style="display:none">
-			<a href="javascript:addACL()"><img  ' . t3lib_iconWorks::skinImg('../../../', 'gfx/new_el.gif') . ' alt="' . $LANG->getLL('addAcl', 1) . '" />' . $LANG->getLL('addAcl', 1) . '</a><br>
+			<img ' . IconUtility::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $LANG->getLL('delAcl', 1) . '" / id="templateDeleteImage" style="display:none">
+			<a href="javascript:addACL()"><img  ' . IconUtility::skinImg('../../../', 'gfx/new_el.gif') . ' alt="' . $LANG->getLL('addAcl', 1) . '" />' . $LANG->getLL('addAcl', 1) . '</a><br>
 
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_user]" value="' . $this->pageinfo['perms_user'] . '" />
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_group]" value="' . $this->pageinfo['perms_group'] . '" />
@@ -493,7 +494,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		$this->content .= $this->doc->section($LANG->getLL('permissions') . ':', $code);
 
 		// CSH for permissions setting
-		$this->content .= t3lib_BEfunc::cshItem('xMOD_csh_corebe', 'perm_module_setting', $GLOBALS['BACK_PATH'], '<br/><br/>');
+		$this->content .= BackendUtility::cshItem('xMOD_csh_corebe', 'perm_module_setting', $GLOBALS['BACK_PATH'], '<br/><br/>');
 
 		// Adding help text:
 		if ($BE_USER->uc['helpText']) {

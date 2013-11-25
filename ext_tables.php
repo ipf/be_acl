@@ -7,7 +7,7 @@ if (!defined("TYPO3_MODE")) {
 
 $TCA["tx_beacl_acl"] = Array(
 	"ctrl" => Array(
-		"title" => "LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl",
+		"title" => "LLL:EXT:be_acl/Resources/Private/Language/locallang_db.xml:tx_beacl_acl",
 		"label" => "uid",
 		"tstamp" => "tstamp",
 		"crdate" => "crdate",
@@ -15,7 +15,7 @@ $TCA["tx_beacl_acl"] = Array(
 		"type" => "type",
 		"default_sortby" => "ORDER BY type",
 		"dynamicConfigFile" => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($_EXTKEY) . 'Configuration/Tca/Acl.php',
-		"iconfile" => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($_EXTKEY) . "icon_tx_beacl_acl.gif",
+		"iconfile" => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath($_EXTKEY) . 'Resources/Public/Images/icon_tx_beacl_acl.gif',
 	),
 	"feInterface" => Array(
 		"fe_admin_fieldList" => "type, object_id, permissions, recursive",

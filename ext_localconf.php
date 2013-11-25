@@ -1,5 +1,8 @@
 <?php
-if (!defined("TYPO3_MODE")) die ("Access denied.");
+if (!defined("TYPO3_MODE")) {
+	die ("Access denied.");
+}
+
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addUserTSConfig('
 	options.saveDocNew.tx_beacl_acl=1
 ');

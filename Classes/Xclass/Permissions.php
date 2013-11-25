@@ -326,7 +326,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		// set JavaScript
 		$subPagesData = '';
 		// generate list if record is available on subpages, if yes, enter the id
-		$this->content .= '<script src="../../../' . t3lib_extMgm::extRelPath('be_acl') . 'res/acl.js" type="text/javascript">
+		$this->content .= '<script src="../../../' . t3lib_extMgm::extRelPath('be_acl') . 'Resources/Public/JavaScript/acl.js" type="text/javascript">
 			' . $subPagesData . '
 		</script>';
 

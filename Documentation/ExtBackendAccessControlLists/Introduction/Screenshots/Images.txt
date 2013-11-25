@@ -1,0 +1,21 @@
+﻿.. |img-1|      image:: ../../Images/manual_html_m1e5a1e37.png
+   :height: 191
+   :width: 469
+.. :align: left
+.. :border: 0
+.. :name: graphics1
+
+.. |img-2|      image:: ../../Images/manual_html_m68ae1b79.gif
+   :height: 208
+   :width: 348
+.. :align: left
+.. :border: 0
+.. :name: Graphic2
+
+.. |img-3|      image:: ../../Images/manual_html_m42523281.png
+   :height: 114
+   :width: 111
+.. :align: left
+.. :border: 0
+.. :name: graphics2
+

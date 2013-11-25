@@ -1,76 +1,76 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <T3locallang>
-    <meta type="array">
-        <description></description>
-        <type>database</type>
-        <csh_table></csh_table>
-        <labelContext type="array">
-        </labelContext>
-    </meta>
-    <data type="array">
-        <languageKey index="default" type="array">
-            <label index="recursiveAcl" type="array">
-                <numIndex index="0" type="array">
-                    <target>Recursive</target>
-                </numIndex>
-            </label>
-            <label index="addAcl" type="array">
-                <numIndex index="0" type="array">
-                    <target>Add ACL</target>
-                </numIndex>
-            </label>
-            <label index="delAcl" type="array">
-                <numIndex index="0" type="array">
-                    <target>Delete ACL</target>
-                </numIndex>
-            </label>
-            <label index="saveAndClose" type="array">
-                <numIndex index="0" type="array">
-                    <target>Save and Close</target>
-                </numIndex>
-            </label>
-            <label index="aclUsers" type="array">
-                <numIndex index="0" type="array">
-                    <target>ACL Users</target>
-                </numIndex>
-            </label>
-            <label index="aclGroups" type="array">
-                <numIndex index="0" type="array">
-                    <target>ACL Groups</target>
-                </numIndex>
-            </label>
-            <label index="aclUser" type="array">
-                <numIndex index="0" type="array">
-                    <target>User</target>
-                </numIndex>
-            </label>
-            <label index="aclGroup" type="array">
-                <numIndex index="0" type="array">
-                    <target>Group</target>
-                </numIndex>
-            </label>
-            <label index="aclObjSelUpdate" type="array">
-                <numIndex index="0" type="array">
-                    <target>Update!</target>
-                </numIndex>
-            </label>
-        </languageKey>
-    </data>
-    <orig_hash type="array">
-        <languageKey index="default" type="array">
-            <label index="recursiveAcl" type="integer">0</label>
-            <label index="addAcl" type="integer">0</label>
-            <label index="delAcl" type="integer">0</label>
-            <label index="saveAndClose" type="integer">0</label>
-            <label index="aclUsers" type="integer">0</label>
-            <label index="aclGroups" type="integer">0</label>
-            <label index="aclUser" type="integer">0</label>
-            <label index="aclGroup" type="integer">0</label>
-            <label index="aclObjSelUpdate" type="integer">0</label>
-        </languageKey>
-    </orig_hash>
-    <orig_text type="array">
-        <languageKey index="default" type="array">
-        </languageKey>
-    </orig_text>
+	<meta type="array">
+		<description></description>
+		<type>database</type>
+		<csh_table></csh_table>
+		<labelContext type="array">
+		</labelContext>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="recursiveAcl" type="array">
+				<numIndex index="0" type="array">
+					<target>Recursive</target>
+				</numIndex>
+			</label>
+			<label index="addAcl" type="array">
+				<numIndex index="0" type="array">
+					<target>Add ACL</target>
+				</numIndex>
+			</label>
+			<label index="delAcl" type="array">
+				<numIndex index="0" type="array">
+					<target>Delete ACL</target>
+				</numIndex>
+			</label>
+			<label index="saveAndClose" type="array">
+				<numIndex index="0" type="array">
+					<target>Save and Close</target>
+				</numIndex>
+			</label>
+			<label index="aclUsers" type="array">
+				<numIndex index="0" type="array">
+					<target>ACL Users</target>
+				</numIndex>
+			</label>
+			<label index="aclGroups" type="array">
+				<numIndex index="0" type="array">
+					<target>ACL Groups</target>
+				</numIndex>
+			</label>
+			<label index="aclUser" type="array">
+				<numIndex index="0" type="array">
+					<target>User</target>
+				</numIndex>
+			</label>
+			<label index="aclGroup" type="array">
+				<numIndex index="0" type="array">
+					<target>Group</target>
+				</numIndex>
+			</label>
+			<label index="aclObjSelUpdate" type="array">
+				<numIndex index="0" type="array">
+					<target>Update!</target>
+				</numIndex>
+			</label>
+		</languageKey>
+	</data>
+	<orig_hash type="array">
+		<languageKey index="default" type="array">
+			<label index="recursiveAcl" type="integer">0</label>
+			<label index="addAcl" type="integer">0</label>
+			<label index="delAcl" type="integer">0</label>
+			<label index="saveAndClose" type="integer">0</label>
+			<label index="aclUsers" type="integer">0</label>
+			<label index="aclGroups" type="integer">0</label>
+			<label index="aclUser" type="integer">0</label>
+			<label index="aclGroup" type="integer">0</label>
+			<label index="aclObjSelUpdate" type="integer">0</label>
+		</languageKey>
+	</orig_hash>
+	<orig_text type="array">
+		<languageKey index="default" type="array">
+		</languageKey>
+	</orig_text>
 </T3locallang>

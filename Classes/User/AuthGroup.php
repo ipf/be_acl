@@ -237,6 +237,7 @@ class AuthGroup {
 	 * @param object $pObj parent class (tcemain)
 	 */
 	public function clearCache($params, $pObj) {
+		debug('call');
 		if ($params['cacheCmd'] == 'temp_CACHED' || $params['cacheCmd'] == 'all') {
 			$this->clearBeaAclCache();
 		}
@@ -253,6 +254,7 @@ class AuthGroup {
 	 * @return void
 	 */
 	public function processDatamap_afterDatabaseOperations($status, $table, $id, &$fieldArray, &$pObj) {
+		debug($table);
 		$beAclConfig = $this->getConfig();
 		$tables = GeneralUtility::trimExplode(',', $beAclConfig['tablesForCacheClear'], TRUE);
 		if (in_array($table, $tables)) {

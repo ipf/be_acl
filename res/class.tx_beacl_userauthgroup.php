@@ -34,11 +34,11 @@ class tx_beacl_userAuthGroup {
 	/**
 	 * Returns a combined binary representation of the current users permissions for the page-record, $row.
 	 * The perms for user, group and everybody is OR'ed together (provided that the page-owner is the user and for the groups that the user is a member of the group
-	 * If the user is admin, 31 is returned	(full permissions for all five flags)
+	 * If the user is admin, 31 is returned    (full permissions for all five flags)
 	 *
-	 * @param	array		Input page row with all perms_* fields available.
-	 * @param	object		BE User Object
-	 * @return	integer		Bitwise representation of the users permissions in relation to input page row, $row
+	 * @param    array        Input page row with all perms_* fields available.
+	 * @param    object        BE User Object
+	 * @return    integer        Bitwise representation of the users permissions in relation to input page row, $row
 	 */
 	public function calcPerms($params, $that) {
 		$row = $params['row'];
@@ -65,14 +65,16 @@ class tx_beacl_userAuthGroup {
 
 			while ($result = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				if ($result['type'] == 0
-					&& ($that->user['uid'] == $result['object_id'])
-					&& $takeUserIntoAccount) { // user has to be taken into account
+						&& ($that->user['uid'] == $result['object_id'])
+						&& $takeUserIntoAccount
+				) { // user has to be taken into account
 					$out |= $result['permissions'];
 					$takeUserIntoAccount = 0;
 
 				} elseif ($result['type'] == 1
-						  && $that->isMemberOfGroup($result['object_id'])
-						  && !in_array($result['object_id'], $groupIdsAlreadyUsed)) {
+						&& $that->isMemberOfGroup($result['object_id'])
+						&& !in_array($result['object_id'], $groupIdsAlreadyUsed)
+				) {
 					$out |= $result['permissions'];
 					$groupIdsAlreadyUsed[] = $result['object_id'];
 				}
@@ -86,24 +88,24 @@ class tx_beacl_userAuthGroup {
 	/**
 	 * Returns a WHERE-clause for the pages-table where user permissions according to input argument, $perms, is validated.
 	 * $perms is the 'mask' used to select. Fx. if $perms is 1 then you'll get all pages that a user can actually see!
-	 *		  2^0 = show (1)
-	 *		 2^1 = edit (2)
-	 *		 2^2 = delete (4)
-	 *		 2^3 = new (8)
+	 *          2^0 = show (1)
+	 *         2^1 = edit (2)
+	 *         2^2 = delete (4)
+	 *         2^3 = new (8)
 	 * If the user is 'admin' " 1=1" is returned (no effect)
 	 * If the user is not set at all (->user is not an array), then " 1=0" is returned (will cause no selection results at all)
 	 * The 95% use of this function is "->getPagePermsClause(1)" which will return WHERE clauses for *selecting* pages in backend listings - in other words will this check read permissions.
 	 *
-	 * @param	integer		Permission mask to use, see function description
-	 * @param	object		BE User Object
-	 * @return	string		Part of where clause. Prefix " AND " to this.
+	 * @param    integer        Permission mask to use, see function description
+	 * @param    object        BE User Object
+	 * @return    string        Part of where clause. Prefix " AND " to this.
 	 */
 
 	function getPagePermsClause($params, $that) {
 
 		$fileCachePath = PATH_site . 'typo3temp/beacl_cache/';
 		$filename = $fileCachePath . 'ppc_' . md5($that->user['uid'] . $params['perms']) . ',cache';
-			// Check if we can return something from cache
+		// Check if we can return something from cache
 		if (file_exists($filename)) {
 			return t3lib_div::getURL($filename);
 		}
@@ -171,7 +173,7 @@ class tx_beacl_userAuthGroup {
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 			'pid, recursive',
 			'tx_beacl_acl',
-			$where . $whereAllow
+				$where . $whereAllow
 		);
 		while ($result = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$aclAllowed[] = $result;
@@ -182,7 +184,7 @@ class tx_beacl_userAuthGroup {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 				'pid, recursive',
 				'tx_beacl_acl',
-				$where . $whereDeny
+					$where . $whereDeny
 			);
 			while ($result = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				$this->aclDisallowed[$result['pid']] = $result['recursive']; // only one ACL per group/user per page is allowed, that's why this line imposes no problem. It rather increases speed.
@@ -209,16 +211,16 @@ class tx_beacl_userAuthGroup {
 	protected function aclTraversePageTree($pid) {
 
 		if (array_key_exists($pid, $this->aclDisallowed)) {
-				// if there is a disallow ACL for the current page, don't add the page to the aclPageList
+			// if there is a disallow ACL for the current page, don't add the page to the aclPageList
 			if ($this->aclDisallowed[$pid] == 1) {
 				return 0; // if recursive, stop processing
 			}
 		} else {
-				// in case there is no disallow ACL, add page ID to aclPageList
+			// in case there is no disallow ACL, add page ID to aclPageList
 			$this->aclPageList[$pid] = $pid;
 		}
 
-			// find subpages and call function itself again
+		// find subpages and call function itself again
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid', 'pages', 'pid=' . intval($pid) . ' AND deleted=0');
 		while ($result = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 			$this->aclTraversePageTree($result['uid']);
@@ -265,7 +267,7 @@ class tx_beacl_userAuthGroup {
 	 * @param  t3lib_TCEmain $pObj
 	 * @return void
 	 */
-	public function processCmdmap_postProcess ($command, $table ,$id, $value, &$pObj) {
+	public function processCmdmap_postProcess($command, $table, $id, $value, &$pObj) {
 		$beAclConfig = $this->getConfig();
 		$tables = t3lib_div::trimExplode(',', $beAclConfig['tablesForCacheClear'], TRUE);
 		if ($command == 'delete' && in_array($table, $tables)) {
@@ -280,13 +282,13 @@ class tx_beacl_userAuthGroup {
 	 */
 	protected function clearBeaAclCache() {
 		$tempPath = PATH_site . 'typo3temp/beacl_cache/';
-			$handle = opendir($tempPath);
-			while ($data = readdir($handle)) {
-				if (!is_dir($data) && $data != "." && $data != "..") {
-					unlink($tempPath . $data);
-				}
+		$handle = opendir($tempPath);
+		while ($data = readdir($handle)) {
+			if (!is_dir($data) && $data != "." && $data != "..") {
+				unlink($tempPath . $data);
 			}
-			closedir($handle);
+		}
+		closedir($handle);
 	}
 
 	/**

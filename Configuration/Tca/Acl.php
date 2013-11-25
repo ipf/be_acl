@@ -1,19 +1,21 @@
 <?php
-if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
+if (!defined('TYPO3_MODE')) {
+	die ('Access denied.');
+}
 
-$TCA['tx_beacl_acl'] = Array (
+$TCA['tx_beacl_acl'] = Array(
 	'ctrl' => $TCA['tx_beacl_acl']['ctrl'],
-	'interface' => Array (
+	'interface' => Array(
 		'showRecordFieldList' => 'type,object_id,permissions,recursive'
 	),
 	'feInterface' => $TCA['tx_beacl_acl']['feInterface'],
-	'columns' => Array (
-		'type' => Array (
+	'columns' => Array(
+		'type' => Array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.type',
-			'config' => Array (
+			'config' => Array(
 				'type' => 'select',
-				'items' => Array (
+				'items' => Array(
 					Array('LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.type.I.0', '0'),
 					Array('LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.type.I.1', '1'),
 				),
@@ -21,10 +23,10 @@ $TCA['tx_beacl_acl'] = Array (
 				'maxitems' => 1,
 			)
 		),
-		'object_id' => Array (
+		'object_id' => Array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.object_id',
-			'config' => Array (
+			'config' => Array(
 				'type' => 'select',
 				#'foreign_table' => 'be_users',
 				#'foreign_table_where' => '',
@@ -34,13 +36,13 @@ $TCA['tx_beacl_acl'] = Array (
 				'maxitems' => 1,
 			)
 		),
-		'permissions' => Array (
+		'permissions' => Array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.permissions',
-			'config' => Array (
+			'config' => Array(
 				'type' => 'check',
 				'cols' => 5,
-				'items' => Array (
+				'items' => Array(
 					Array('LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.permissions.I.0', ''),
 					Array('LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.permissions.I.1', ''),
 					Array('LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.permissions.I.2', ''),
@@ -49,21 +51,19 @@ $TCA['tx_beacl_acl'] = Array (
 				),
 			)
 		),
-		'recursive' => Array (
+		'recursive' => Array(
 			'exclude' => 1,
 			'label' => 'LLL:EXT:be_acl/locallang_db.php:tx_beacl_acl.recursive',
-			'config' => Array (
+			'config' => Array(
 				'type' => 'check'
 			)
 		),
 	),
-	'types' => Array (
+	'types' => Array(
 		'0' => Array('showitem' => 'type;;;;1-1-1, object_id, permissions, recursive'),
 		'1' => Array('showitem' => 'type;;;;1-1-1, object_id, permissions, recursive')
 	),
-	'palettes' => Array (
+	'palettes' => Array(
 		'1' => Array('showitem' => '')
 	)
 );
-
-?>

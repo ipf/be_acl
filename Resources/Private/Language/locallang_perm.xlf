@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2013-11-26T16:12:14Z" product-name="be_acl">
+		<header/>
+		<body>
+			<trans-unit id="recursiveAcl" xml:space="preserve" approved="yes">
+				<source>Recursive</source>
+			<target state="signed-off">Recursive</target></trans-unit>
+
+			<trans-unit id="addAcl" xml:space="preserve" approved="yes">
+				<source>Add ACL</source>
+			<target state="translated">Add ACL</target></trans-unit>
+
+			<trans-unit id="delAcl" xml:space="preserve" approved="yes">
+				<source>Delete ACL</source>
+			<target state="signed-off">Delete ACL</target></trans-unit>
+
+			<trans-unit id="saveAndClose" xml:space="preserve" approved="yes">
+				<source>Save and Close</source>
+			<target state="signed-off">Save and Close</target></trans-unit>
+
+			<trans-unit id="aclUsers" xml:space="preserve" approved="yes">
+				<source>ACL Users</source>
+			<target state="signed-off">ACL Users</target></trans-unit>
+
+			<trans-unit id="aclGroups" xml:space="preserve" approved="yes">
+				<source>ACL Groups</source>
+			<target state="signed-off">ACL Groups</target></trans-unit>
+
+			<trans-unit id="aclUser" xml:space="preserve" approved="yes">
+				<source>User</source>
+			<target state="signed-off">User</target></trans-unit>
+
+			<trans-unit id="aclGroup" xml:space="preserve" approved="yes">
+				<source>Group</source>
+			<target state="signed-off">Group</target></trans-unit>
+
+			<trans-unit id="aclObjSelUpdate" xml:space="preserve" approved="yes">
+				<source>Update!</source>
+			<target state="signed-off">Update!</target></trans-unit>
+		</body>
+	</file>
+</xliff>

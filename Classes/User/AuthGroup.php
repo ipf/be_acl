@@ -24,7 +24,7 @@ namespace Ipf\BeAcl\User;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use \TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -39,9 +39,9 @@ class AuthGroup {
 	 * The perms for user, group and everybody is OR'ed together (provided that the page-owner is the user and for the groups that the user is a member of the group
 	 * If the user is admin, 31 is returned    (full permissions for all five flags)
 	 *
-	 * @param    array        Input page row with all perms_* fields available.
-	 * @param    object        BE User Object
-	 * @return    integer        Bitwise representation of the users permissions in relation to input page row, $row
+	 * @param array Input page row with all perms_* fields available.
+	 * @param object BE User Object
+	 * @return integer Bitwise representation of the users permissions in relation to input page row, $row
 	 */
 	public function calcPerms($params, $that) {
 		$row = $params['row'];
@@ -64,7 +64,13 @@ class AuthGroup {
 			} else {
 				$recursive = '';
 			}
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'tx_beacl_acl', 'pid=' . intval($values['uid']) . $recursive, '', 'recursive ASC');
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
+				'*',
+				'tx_beacl_acl',
+				'pid=' . intval($values['uid']) . $recursive,
+				'',
+				'recursive ASC'
+			);
 
 			while ($result = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
 				if ($result['type'] == 0
@@ -99,11 +105,10 @@ class AuthGroup {
 	 * If the user is not set at all (->user is not an array), then " 1=0" is returned (will cause no selection results at all)
 	 * The 95% use of this function is "->getPagePermsClause(1)" which will return WHERE clauses for *selecting* pages in backend listings - in other words will this check read permissions.
 	 *
-	 * @param    integer        Permission mask to use, see function description
-	 * @param    object        BE User Object
-	 * @return    string        Part of where clause. Prefix " AND " to this.
+	 * @param integer Permission mask to use, see function description
+	 * @param object BE User Object
+	 * @return string Part of where clause. Prefix " AND " to this.
 	 */
-
 	function getPagePermsClause($params, $that) {
 
 		$fileCachePath = PATH_site . 'typo3temp/beacl_cache/';
@@ -112,7 +117,6 @@ class AuthGroup {
 		if (file_exists($filename)) {
 			return GeneralUtility::getURL($filename);
 		}
-
 
 		// get be_acl config in EM
 		$beAclConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['be_acl']);

@@ -32,7 +32,7 @@ use \TYPO3\CMS\Backend\Utility\IconUtility;
 /**
  * Backend ACL - Replacement for "web->Access"
  *
- * @author  Sebastian Kurfuerst <sebastian@garbage-group.de>
+ * @author Sebastian Kurfuerst <sebastian@garbage-group.de>
  */
 class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController {
 
@@ -41,19 +41,13 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 	 */
 	protected $code = '';
 
-	/*****************************
-	 *
-	 * Listing and Form rendering
-	 *
-	 *****************************/
-
 	/**
 	 * Showing the permissions in a tree ($this->edit = false)
 	 * (Adding content to internal content variable)
 	 *
 	 * @return    void
 	 */
-	function notEdit() {
+	public function notEdit() {
 
 		// get ACL configuration
 		$beAclConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['be_acl']);
@@ -144,7 +138,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 	 * Creating form for editing the permissions    ($this->edit = true)
 	 * (Adding content to internal content variable)
 	 *
-	 * @return    void
+	 * @return void
 	 */
 	function doEdit() {
 
@@ -156,7 +150,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			$disableOldPermissionSystem = 0;
 		}
 
-		$GLOBALS['LANG']->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
+		$GLOBALS['LANG']->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xlf');
 
 		// Get usernames and groupnames
 		$be_group_Array = BackendUtility::getListGroupNames('title,uid');
@@ -234,8 +228,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 					'</option>' .
 					$options;
 		}
-		$options = '
-				<option value="0"></option>' . $options;
+		$options = '<option value="0"></option>' . $options;
 		$selector = '
 			<select name="data[pages][' . $this->id . '][perms_groupid]"  ' . $hidden . '>
 				' . $options . '
@@ -333,7 +326,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_group]" value="' . $this->pageinfo['perms_group'] . '" />
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_everybody]" value="' . $this->pageinfo['perms_everybody'] . '" />
 			' . ($disableOldPermissionSystem ? '' : $this->getRecursiveSelect($this->id, $this->perms_clause)) . '
-			<input type="submit" name="submit" value="' . $GLOBALS['LANG']->getLL('saveAndClose', 1) . '" />' .
+			<input type="submit" name="submit" value="a' . $GLOBALS['LANG']->getLL('saveAndClose', 1) . '" />' .
 				'<input type="submit" value="' . $GLOBALS['LANG']->getLL('Abort', 1) . '" onclick="' . htmlspecialchars('jumpToUrl(\'index.php?id=' . $this->id . '\'); return false') . '" />
 			<input type="hidden" name="redirect" value="' . htmlspecialchars(TYPO3_MOD_PATH . 'index.php?mode=' . $this->MOD_SETTINGS['mode'] . '&depth=' . $this->MOD_SETTINGS['depth'] . '&id=' . intval($this->return_id) . '&lastEdited=' . $this->id) . '" />
 		';

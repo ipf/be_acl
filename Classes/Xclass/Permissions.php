@@ -36,6 +36,10 @@ use \TYPO3\CMS\Backend\Utility\IconUtility;
  */
 class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController {
 
+	/**
+	 * @var string
+	 */
+	protected $code = '';
 
 	/*****************************
 	 *
@@ -50,7 +54,6 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 	 * @return    void
 	 */
 	function notEdit() {
-		global $BE_USER, $LANG, $BACK_PATH;
 
 		// get ACL configuration
 		$beAclConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['be_acl']);
@@ -60,9 +63,9 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			$disableOldPermissionSystem = 0;
 		}
 
-		$LANG->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
+		$GLOBALS['LANG']->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
 		// Get usernames and groupnames: The arrays we get in return contains only 1) users which are members of the groups of the current user, 2) groups that the current user is member of
-		$groupArray = $BE_USER->userGroupsUID;
+		$groupArray = $GLOBALS['BE_USER']->userGroupsUID;
 		$be_user_Array = BackendUtility::getUserNames();
 		if (!$GLOBALS['BE_USER']->isAdmin()) {
 			$be_user_Array = BackendUtility::blindUserNames($be_user_Array, $groupArray, 0);
@@ -76,12 +79,14 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		$tLen = ($this->MOD_SETTINGS['mode'] == 'perms' ? 20 : 30);
 
 		// Selector for depth:
-		$code .= $LANG->getLL('Depth') . ': ';
+		$code .= $GLOBALS['LANG']->getLL('Depth') . ': ';
 		$code .= BackendUtility::getFuncMenu($this->id, 'SET[depth]', $this->MOD_SETTINGS['depth'], $this->MOD_MENU['depth']);
 		$this->content .= $this->doc->section('', $code);
 		$this->content .= $this->doc->spacer(5);
 
 		// Initialize tree object:
+
+		/** @var \TYPO3\CMS\Backend\Tree\View\PageTreeView $tree */
 		$tree = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Tree\\View\\PageTreeView');
 		$tree->init('AND ' . $this->perms_clause);
 
@@ -97,7 +102,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		$tree->addField('editlock');
 
 		// Creating top icon; the current page
-		$HTML = \TYPO3\CMS\Backend\Utility\IconUtility::getIconImage('pages', $this->pageinfo, $BACK_PATH, 'align="top"');
+		$HTML = IconUtility::getIconImage('pages', $this->pageinfo, $GLOBALS['BACK_PATH'], 'align="top"');
 		$tree->tree[] = Array('row' => $this->pageinfo, 'HTML' => $HTML);
 
 		// Create the tree from $this->id:
@@ -112,184 +117,27 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		$this->content .= $displayUserSelector;
 		$this->content .= $displayGroupSelector;
 
-
 		// Make header of table:
-		$code = '';
-
-		if ($this->MOD_SETTINGS['mode'] == 'perms') {
-			$code .= '
-				<tr>
-					<td class="bgColor2" colspan="2">&nbsp;</td>';
-			$code .= '
-					<td class="bgColor2"><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>';
-			$tableCells = Array();
-			if (!$disableOldPermissionSystem) {
-				$tableCells[] = '<b>' . $LANG->getLL('Owner', 1) . '</b>';
-				$tableCells[] = '<b>' . $LANG->getLL('Group', 1) . '</b>';
-				$tableCells[] = '<b>' . $LANG->getLL('Everybody', 1) . '</b>';
-			}
-
-			// ACL headers
-			if (!empty($aclUsers)) {
-				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('aclUser') . '</b>';
-				foreach ($aclUsers as $uid) {
-					$tableCells[] = $be_user_Array[$uid]['username'];
-				}
-			}
-			if (!empty($aclGroups)) {
-				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('aclGroup') . '</b>';
-				foreach ($aclGroups as $uid) {
-					$tableCells[] = $be_group_Array[$uid]['title'];
-				}
-			}
-			$code .= $this->printTableHeader($tableCells);
-			$code .= '</tr>';
-		} else {
-			$code .= '
-				<tr>
-					<td class="bgColor2" colspan="2">&nbsp;</td>
-					<td class="bgColor2"><img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-					<td class="bgColor2" align="center" nowrap="nowrap"><b>' . $LANG->getLL('User', 1) . ':</b> ' . $BE_USER->user['username'] . '</td>
-					' . (!$BE_USER->isAdmin() ? '<td class="bgColor2"><img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-					<td class="bgColor2" align="center"><b>' . $LANG->getLL('EditLock', 1) . '</b></td>' : '') . '
-				</tr>';
-		}
+		$uid = $this->createTableHead($disableOldPermissionSystem, $aclUsers, $be_user_Array, $aclGroups, $be_group_Array);
 
 		// Traverse tree:
-		foreach ($tree->tree as $data) {
-			$cells = array();
-
-			// Background colors:
-			//if ($this->lastEdited==$data['row']['uid'])	{$bgCol = ' class="bgColor-20"';} else {$bgCol = '';}
-
-			$bgCol = '';
-
-			$lE_bgCol = $bgCol;
-
-			// User/Group names:
-			$userN = $be_user_Array[$data['row']['perms_userid']] ? $be_user_Array[$data['row']['perms_userid']]['username'] : ($data['row']['perms_userid'] ? '<i>[' . $data['row']['perms_userid'] . ']!</i>' : '');
-			$groupN = $be_group_Array[$data['row']['perms_groupid']] ? $be_group_Array[$data['row']['perms_groupid']]['title'] : ($data['row']['perms_groupid'] ? '<i>[' . $data['row']['perms_groupid'] . ']!</i>' : '');
-			$groupN = GeneralUtility::fixed_lgd_cs($groupN, 20);
-
-			// Seeing if editing of permissions are allowed for that page:
-			$editPermsAllowed = ($data['row']['perms_userid'] == $BE_USER->user['uid'] || $BE_USER->isAdmin());
-
-			// First column:
-			$cells[] = '
-					<td align="left" nowrap="nowrap"' . $bgCol . $this->generateTitleAttribute($data['row']['uid'], $be_user_Array, $be_group_Array) . '>' . $data['HTML'] . htmlspecialchars(GeneralUtility::fixed_lgd_cs($data['row']['title'], $tLen)) . '&nbsp;</td>';
-
-			// "Edit permissions" -icon
-			if ($editPermsAllowed && $data['row']['uid']) {
-				$aHref = 'index.php?mode=' . $this->MOD_SETTINGS['mode'] . '&depth=' . $this->MOD_SETTINGS['depth'] . '&id=' . $data['row']['uid'] . '&return_id=' . $this->id . '&edit=1';
-				$cells[] = '
-					<td' . $bgCol . '><a href="' . htmlspecialchars($aHref) . '"><img' . IconUtility::skinImg($BACK_PATH, 'gfx/edit2.gif', 'width="11" height="12"') . ' border="0" title="' . $LANG->getLL('ch_permissions', 1) . '" align="top" alt="" /></a></td>';
-			} else {
-				$cells[] = '
-					<td' . $bgCol . '></td>';
-			}
-
-			// Rest of columns (depending on mode)
-			if ($this->MOD_SETTINGS['mode'] == 'perms') {
-				if (!$disableOldPermissionSystem) {
-					$cells[] = '
-						<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-						<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['uid'] ? $this->printPerms($data['row']['perms_user']) . ' ' . $userN : '') . '</td>
-
-						<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-						<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['uid'] ? $this->printPerms($data['row']['perms_group']) . ' ' . $groupN : '') . '</td>
-
-						<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-						<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['uid'] ? ' ' . $this->printPerms($data['row']['perms_everybody']) : '') . '</td>';
-				}
-
-				// ACL rows
-				if (!empty($aclUsers)) {
-					$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td><td' . $bgCol . '>' . $this->countAcls($this->aclList[$data['row']['uid']][0]) . '</td>';
-					foreach ($aclUsers as $uid) {
-						$tmpBg = $bgCol;
-						if (isset($this->aclList[$data['row']['uid']][0][$uid]['newAcl'])) {
-							if ($this->aclList[$data['row']['uid']][0][$uid]['recursive']) {
-								$tmpBg = ' class="bgColor5"';
-							} else {
-								$tmpBg = ' class="bgColor6"';
-							}
-						}
-
-						$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-						<td' . $tmpBg . ' nowrap="nowrap">' . ($data['row']['uid'] ? ' ' . $this->printPerms($this->aclList[$data['row']['uid']][0][$uid]['permissions']) : '') . '</td>';
-					}
-				}
-				if (!empty($aclGroups)) {
-					$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td><td' . $bgCol . '>' . $this->countAcls($this->aclList[$data['row']['uid']][1]) . '</td>';
-					foreach ($aclGroups as $uid) {
-						$tmpBg = $bgCol;
-						if (isset($this->aclList[$data['row']['uid']][1][$uid]['newAcl'])) {
-							if ($this->aclList[$data['row']['uid']][1][$uid]['recursive']) {
-								$tmpBg = ' class="bgColor5"';
-							} else {
-								$tmpBg = ' class="bgColor6"';
-							}
-						}
-						$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-						<td' . $tmpBg . ' nowrap="nowrap">' . ($data['row']['uid'] ? ' ' . $this->printPerms($this->aclList[$data['row']['uid']][1][$uid]['permissions']) : '') . '</td>';
-					}
-				}
-
-			} else {
-				$cells[] = '
-					<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>';
-
-				if ($BE_USER->user['uid'] == $data['row']['perms_userid']) {
-					$bgCol = ' class="bgColor-20"';
-				} else {
-					$bgCol = $lE_bgCol;
-				}
-				$cells[] = '
-					<td' . $bgCol . ' nowrap="nowrap" align="center">' . ($data['row']['uid'] ? $owner . $this->printPerms($BE_USER->calcPerms($data['row'])) : '') . '</td>
-					' . (!$BE_USER->isAdmin() ? '
-					<td' . $bgCol . '><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
-					<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['editlock'] ? '<img' . IconUtility::skinImg($BACK_PATH, 'gfx/recordlock_warning2.gif', 'width="22" height="16"') . ' title="' . $LANG->getLL('EditLock_descr', 1) . '" alt="" />' : '') . '</td>
-					' : '');
-				$bgCol = $lE_bgCol;
-			}
-
-			// Compile table row:
-			$code .= '
-				<tr>
-					' . implode('
-					', $cells) . '
-				</tr>';
-		}
+		$this->traverseTree($tree, $be_user_Array, $be_group_Array, $tLen, $disableOldPermissionSystem, $aclUsers, $aclGroups, $owner);
 
 		// Wrap rows in table tags:
-		$code = '<table border="0" cellspacing="0" cellpadding="0" id="typo3-permissionList">' . $code . '</table>';
+		$this->code = '<table border="0" cellspacing="0" cellpadding="0" id="typo3-permissionList">' . $this->code . '</table>';
 
 		// Adding the content as a section:
-		$this->content .= $this->doc->section('', $code);
+		$this->content .= $this->doc->section('', $this->code);
 
 		// CSH for permissions setting
 		$this->content .= BackendUtility::cshItem('xMOD_csh_corebe', 'perm_module', $GLOBALS['BACK_PATH'], '<br/>|');
 
 		// Creating legend table:
-		$legendText = '<b>' . $LANG->getLL('1', 1) . '</b>: ' . $LANG->getLL('1_t', 1);
-		$legendText .= '<br /><b>' . $LANG->getLL('16', 1) . '</b>: ' . $LANG->getLL('16_t', 1);
-		$legendText .= '<br /><b>' . $LANG->getLL('2', 1) . '</b>: ' . $LANG->getLL('2_t', 1);
-		$legendText .= '<br /><b>' . $LANG->getLL('4', 1) . '</b>: ' . $LANG->getLL('4_t', 1);
-		$legendText .= '<br /><b>' . $LANG->getLL('8', 1) . '</b>: ' . $LANG->getLL('8_t', 1);
-
-		$code = '<table border="0" id="typo3-legendTable">
-			<tr>
-				<td valign="top"><img src="legend.gif" width="86" height="75" alt="" /></td>
-				<td valign="top" nowrap="nowrap">' . $legendText . '</td>
-			</tr>
-		</table>';
-		$code .= '<br />' . $LANG->getLL('def', 1);
-		$code .= '<br /><br /><span class="perm-allowed">*</span>: ' . $LANG->getLL('A_Granted', 1);
-		$code .= '<br /><span class="perm-denied">x</span>: ' . $LANG->getLL('A_Denied', 1);
+		$this->createLegendTable();
 
 		// Adding section with legend code:
 		$this->content .= $this->doc->spacer(20);
-		$this->content .= $this->doc->section($LANG->getLL('Legend') . ':', $code, 0, 1);
+		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('Legend') . ':', $this->code, 0, 1);
 	}
 
 	/**
@@ -299,7 +147,6 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 	 * @return    void
 	 */
 	function doEdit() {
-		global $BE_USER, $LANG;
 
 		// get ACL configuration
 		$beAclConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['be_acl']);
@@ -309,16 +156,20 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			$disableOldPermissionSystem = 0;
 		}
 
-		$LANG->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
+		$GLOBALS['LANG']->includeLLFile('EXT:be_acl/Resources/Private/Language/locallang_perm.xml');
 
 		// Get usernames and groupnames
 		$be_group_Array = BackendUtility::getListGroupNames('title,uid');
 		$groupArray = array_keys($be_group_Array);
 
 		$be_user_Array = BackendUtility::getUserNames();
-		if (!$GLOBALS['BE_USER']->isAdmin()) $be_user_Array = BackendUtility::blindUserNames($be_user_Array, $groupArray, 1);
+		if (!$GLOBALS['BE_USER']->isAdmin()) {
+			$be_user_Array = BackendUtility::blindUserNames($be_user_Array, $groupArray, 1);
+		}
 		$be_group_Array_o = $be_group_Array = BackendUtility::getGroupNames();
-		if (!$GLOBALS['BE_USER']->isAdmin()) $be_group_Array = BackendUtility::blindGroupNames($be_group_Array_o, $groupArray, 1);
+		if (!$GLOBALS['BE_USER']->isAdmin()) {
+			$be_group_Array = BackendUtility::blindGroupNames($be_group_Array_o, $groupArray, 1);
+		}
 		$firstGroup = $groupArray[0] ? $be_group_Array[$groupArray[0]] : ''; // data of the first group, the user is member of
 
 
@@ -360,7 +211,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		if ($disableOldPermissionSystem) {
 			$this->content .= $selector;
 		} else {
-			$this->content .= $this->doc->section($LANG->getLL('Owner') . ':', $selector);
+			$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('Owner') . ':', $selector);
 		}
 
 		// Group selector:
@@ -394,7 +245,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			$this->content .= $selector;
 		} else {
 			$this->content .= $this->doc->divider(5);
-			$this->content .= $this->doc->section($LANG->getLL('Group') . ':', $selector);
+			$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('Group') . ':', $selector);
 		}
 		// Permissions checkbox matrix:
 		$code = '
@@ -402,18 +253,18 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			<table border="0" cellspacing="2" cellpadding="0" id="typo3-permissionMatrix"><tbody>
 				<tr>
 					<td></td>
-					<td class="bgColor2">' . str_replace(' ', '<br />', $LANG->getLL('1', 1)) . '</td>
-					<td class="bgColor2">' . str_replace(' ', '<br />', $LANG->getLL('16', 1)) . '</td>
-					<td class="bgColor2">' . str_replace(' ', '<br />', $LANG->getLL('2', 1)) . '</td>
-					<td class="bgColor2">' . str_replace(' ', '<br />', $LANG->getLL('4', 1)) . '</td>
-					<td class="bgColor2">' . str_replace(' ', '<br />', $LANG->getLL('8', 1)) . '</td>
-					<td class="bgColor2">' . str_replace(' ', '<br />', $LANG->getLL('recursiveAcl', 1)) . '</td>
+					<td class="bgColor2">' . str_replace(' ', '<br />', $GLOBALS['LANG']->getLL('1', 1)) . '</td>
+					<td class="bgColor2">' . str_replace(' ', '<br />', $GLOBALS['LANG']->getLL('16', 1)) . '</td>
+					<td class="bgColor2">' . str_replace(' ', '<br />', $GLOBALS['LANG']->getLL('2', 1)) . '</td>
+					<td class="bgColor2">' . str_replace(' ', '<br />', $GLOBALS['LANG']->getLL('4', 1)) . '</td>
+					<td class="bgColor2">' . str_replace(' ', '<br />', $GLOBALS['LANG']->getLL('8', 1)) . '</td>
+					<td class="bgColor2">' . str_replace(' ', '<br />', $GLOBALS['LANG']->getLL('recursiveAcl', 1)) . '</td>
 					<td></td>
 				</tr>';
 		if (!$disableOldPermissionSystem) {
 			$code .= '
 				<tr>
-					<td align="right" class="bgColor2">' . $LANG->getLL('Owner', 1) . '</td>
+					<td align="right" class="bgColor2">' . $GLOBALS['LANG']->getLL('Owner', 1) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_user', 1) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_user', 5) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_user', 2) . '</td>
@@ -423,7 +274,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 					<td></td>
 				</tr>
 				<tr>
-					<td align="right" class="bgColor2">' . $LANG->getLL('Group', 1) . '</td>
+					<td align="right" class="bgColor2">' . $GLOBALS['LANG']->getLL('Group', 1) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_group', 1) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_group', 5) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_group', 2) . '</td>
@@ -433,7 +284,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 					<td></td>
 				</tr>
 				<tr>
-					<td align="right" class="bgColor2">' . $LANG->getLL('Everybody', 1) . '</td>
+					<td align="right" class="bgColor2">' . $GLOBALS['LANG']->getLL('Everybody', 1) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_everybody', 1) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_everybody', 5) . '</td>
 					<td class="bgColor-20">' . $this->printCheckBox('perms_everybody', 2) . '</td>
@@ -466,7 +317,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 						<input type="hidden" name="' . $acl_prefix . '[recursive]" value="0" />
 						<input type="checkbox" name="' . $acl_prefix . '[recursive]" value="1" ' . ($result['recursive'] ? 'checked="checked"' : '') . ' />
 					</td>
-					<td><a href="#" onClick="deleteACL(' . $result['uid'] . ')"><img ' . IconUtility::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $LANG->getLL('delAcl', 1) . '" /></a></td>
+					<td><a href="#" onClick="deleteACL(' . $result['uid'] . ')"><img ' . IconUtility::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $GLOBALS['LANG']->getLL('delAcl', 1) . '" /></a></td>
 				</tr>';
 		}
 
@@ -475,36 +326,36 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			</table>
 			<br />
 			<span id="insertHiddenFields"></span>
-			<img ' . IconUtility::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $LANG->getLL('delAcl', 1) . '" / id="templateDeleteImage" style="display:none">
-			<a href="javascript:addACL()"><img  ' . IconUtility::skinImg('../../../', 'gfx/new_el.gif') . ' alt="' . $LANG->getLL('addAcl', 1) . '" />' . $LANG->getLL('addAcl', 1) . '</a><br>
+			<img ' . IconUtility::skinImg('../../../', 'gfx/garbage.gif') . ' alt="' . $GLOBALS['LANG']->getLL('delAcl', 1) . '" / id="templateDeleteImage" style="display:none">
+			<a href="javascript:addACL()"><img  ' . IconUtility::skinImg('../../../', 'gfx/new_el.gif') . ' alt="' . $GLOBALS['LANG']->getLL('addAcl', 1) . '" />' . $GLOBALS['LANG']->getLL('addAcl', 1) . '</a><br>
 
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_user]" value="' . $this->pageinfo['perms_user'] . '" />
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_group]" value="' . $this->pageinfo['perms_group'] . '" />
 			<input type="hidden" name="data[pages][' . $this->id . '][perms_everybody]" value="' . $this->pageinfo['perms_everybody'] . '" />
 			' . ($disableOldPermissionSystem ? '' : $this->getRecursiveSelect($this->id, $this->perms_clause)) . '
-			<input type="submit" name="submit" value="' . $LANG->getLL('saveAndClose', 1) . '" />' .
-				'<input type="submit" value="' . $LANG->getLL('Abort', 1) . '" onclick="' . htmlspecialchars('jumpToUrl(\'index.php?id=' . $this->id . '\'); return false') . '" />
+			<input type="submit" name="submit" value="' . $GLOBALS['LANG']->getLL('saveAndClose', 1) . '" />' .
+				'<input type="submit" value="' . $GLOBALS['LANG']->getLL('Abort', 1) . '" onclick="' . htmlspecialchars('jumpToUrl(\'index.php?id=' . $this->id . '\'); return false') . '" />
 			<input type="hidden" name="redirect" value="' . htmlspecialchars(TYPO3_MOD_PATH . 'index.php?mode=' . $this->MOD_SETTINGS['mode'] . '&depth=' . $this->MOD_SETTINGS['depth'] . '&id=' . intval($this->return_id) . '&lastEdited=' . $this->id) . '" />
 		';
 
 		// Adding section with the permission setting matrix:
 		$this->content .= $this->doc->divider(5);
-		$this->content .= $this->doc->section($LANG->getLL('permissions') . ':', $code);
+		$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('permissions') . ':', $code);
 
 		// CSH for permissions setting
 		$this->content .= BackendUtility::cshItem('xMOD_csh_corebe', 'perm_module_setting', $GLOBALS['BACK_PATH'], '<br/><br/>');
 
 		// Adding help text:
-		if ($BE_USER->uc['helpText']) {
+		if ($GLOBALS['BE_USER']->uc['helpText']) {
 			$this->content .= $this->doc->divider(20);
-			$legendText = '<b>' . $LANG->getLL('1', 1) . '</b>: ' . $LANG->getLL('1_t', 1);
-			$legendText .= '<br /><b>' . $LANG->getLL('16', 1) . '</b>: ' . $LANG->getLL('16_t', 1);
-			$legendText .= '<br /><b>' . $LANG->getLL('2', 1) . '</b>: ' . $LANG->getLL('2_t', 1);
-			$legendText .= '<br /><b>' . $LANG->getLL('4', 1) . '</b>: ' . $LANG->getLL('4_t', 1);
-			$legendText .= '<br /><b>' . $LANG->getLL('8', 1) . '</b>: ' . $LANG->getLL('8_t', 1);
+			$legendText = '<b>' . $GLOBALS['LANG']->getLL('1', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('1_t', 1);
+			$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('16', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('16_t', 1);
+			$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('2', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('2_t', 1);
+			$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('4', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('4_t', 1);
+			$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('8', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('8_t', 1);
 
-			$code = $legendText . '<br /><br />' . $LANG->getLL('def', 1);
-			$this->content .= $this->doc->section($LANG->getLL('Legend', 1) . ':', $code);
+			$code = $legendText . '<br /><br />' . $GLOBALS['LANG']->getLL('def', 1);
+			$this->content .= $this->doc->section($GLOBALS['LANG']->getLL('Legend', 1) . ':', $code);
 		}
 	}
 
@@ -555,7 +406,6 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 	 * @return    array        list of groups/users where the ACLs will be shown
 	 */
 	protected function acl_objectSelector($type, &$displayPointer, $conf) {
-		global $BE_USER;
 		$aclObjects = Array();
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery(
 			'tx_beacl_acl.object_id AS object_id, tx_beacl_acl.type AS type',
@@ -576,7 +426,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		if (!empty($aclObjects)) {
 
 			// Get usernames and groupnames: The arrays we get in return contains only 1) users which are members of the groups of the current user, 2) groups that the current user is member of
-			$groupArray = $BE_USER->userGroupsUID;
+			$groupArray = $GLOBALS['BE_USER']->userGroupsUID;
 			$be_user_Array = BackendUtility::getUserNames();
 			if (!$GLOBALS['BE_USER']->isAdmin()) {
 				$be_user_Array = BackendUtility::blindUserNames($be_user_Array, $groupArray, 0);
@@ -587,7 +437,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			}
 
 			// get current selection from UC, merge data, write it back to UC
-			$currentSelection = is_array($BE_USER->uc['moduleData']['txbeacl_aclSelector'][$type]) ? $BE_USER->uc['moduleData']['txbeacl_aclSelector'][$type] : array();
+			$currentSelection = is_array($GLOBALS['BE_USER']->uc['moduleData']['txbeacl_aclSelector'][$type]) ? $GLOBALS['BE_USER']->uc['moduleData']['txbeacl_aclSelector'][$type] : array();
 
 			$currentSelectionOverride_raw = GeneralUtility::_GP('tx_beacl_objsel');
 			$currentSelectionOverride = Array();
@@ -599,8 +449,8 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 			if ($currentSelectionOverride) {
 				$currentSelection = $currentSelectionOverride;
 			}
-			$BE_USER->uc['moduleData']['txbeacl_aclSelector'][$type] = $currentSelection;
-			$BE_USER->writeUC($BE_USER->uc);
+			$GLOBALS['BE_USER']->uc['moduleData']['txbeacl_aclSelector'][$type] = $currentSelection;
+			$GLOBALS['BE_USER']->writeUC($GLOBALS['BE_USER']->uc);
 
 			// display selector
 			$displayCode = '<select size="' . \TYPO3\CMS\Core\Utility\MathUtility::forceIntegerInRange((count($aclObjects)), 5, 15) . '" name="tx_beacl_objsel[' . $type . '][]" multiple="multiple">';
@@ -745,8 +595,7 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 	 * @return    string        HTML output for the cells
 	 */
 	protected function printTableHeader($cells) {
-		global $BACK_PATH;
-		$verticalDivider = '<td class="bgColor2"><img' . IconUtility::skinImg($BACK_PATH, 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>';
+		$verticalDivider = '<td class="bgColor2"><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>';
 		$wrappedCells = Array();
 		foreach ($cells as $singleCell) {
 			$wrappedCells[] = '<td class="bgColor2" align="center"><b>' . $singleCell . '</b></td>';
@@ -787,6 +636,189 @@ class Permissions extends \TYPO3\CMS\Perm\Controller\PermissionModuleController 
 		$str .= (($int & 8) ? '*' : '<span class="perm-denied">x</span>');
 
 		return '<span class="perm-allowed">' . $str . '</span>';
+	}
+
+	/**
+	 * @param $disableOldPermissionSystem
+	 * @param $aclUsers
+	 * @param $be_user_Array
+	 * @param $aclGroups
+	 * @param $be_group_Array
+	 * @return mixed
+	 */
+	protected function createTableHead($disableOldPermissionSystem, $aclUsers, $be_user_Array, $aclGroups, $be_group_Array) {
+		if ($this->MOD_SETTINGS['mode'] == 'perms') {
+			$this->code .= '
+				<tr>
+					<td class="bgColor2" colspan="2">&nbsp;</td>';
+			$this->code .= '
+					<td class="bgColor2"><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>';
+			$tableCells = Array();
+			if (!$disableOldPermissionSystem) {
+				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('Owner', 1) . '</b>';
+				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('Group', 1) . '</b>';
+				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('Everybody', 1) . '</b>';
+			}
+
+			// ACL headers
+			if (!empty($aclUsers)) {
+				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('aclUser') . '</b>';
+				foreach ($aclUsers as $uid) {
+					$tableCells[] = $be_user_Array[$uid]['username'];
+				}
+			}
+			if (!empty($aclGroups)) {
+				$tableCells[] = '<b>' . $GLOBALS['LANG']->getLL('aclGroup') . '</b>';
+				foreach ($aclGroups as $uid) {
+					$tableCells[] = $be_group_Array[$uid]['title'];
+				}
+			}
+			$this->code .= $this->printTableHeader($tableCells);
+			$this->code .= '</tr>';
+			return $uid;
+		} else {
+			$this->code .= '
+				<tr>
+					<td class="bgColor2" colspan="2">&nbsp;</td>
+					<td class="bgColor2"><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+					<td class="bgColor2" align="center" nowrap="nowrap"><b>' . $GLOBALS['LANG']->getLL('User', 1) . ':</b> ' . $GLOBALS['BE_USER']->user['username'] . '</td>
+					' . (!$GLOBALS['BE_USER']->isAdmin() ? '<td class="bgColor2"><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+					<td class="bgColor2" align="center"><b>' . $GLOBALS['LANG']->getLL('EditLock', 1) . '</b></td>' : '') . '
+				</tr>';
+			return $uid;
+		}
+	}
+
+	/**
+	 * @param $tree
+	 * @param $be_user_Array
+	 * @param $be_group_Array
+	 * @param $tLen
+	 * @param $disableOldPermissionSystem
+	 * @param $aclUsers
+	 * @param $aclGroups
+	 * @param $owner
+	 */
+	protected function traverseTree($tree, $be_user_Array, $be_group_Array, $tLen, $disableOldPermissionSystem, $aclUsers, $aclGroups, $owner) {
+		foreach ($tree->tree as $data) {
+			$cells = array();
+
+			$bgCol = '';
+
+			$lE_bgCol = $bgCol;
+
+			// User/Group names:
+			$userN = $be_user_Array[$data['row']['perms_userid']] ? $be_user_Array[$data['row']['perms_userid']]['username'] : ($data['row']['perms_userid'] ? '<i>[' . $data['row']['perms_userid'] . ']!</i>' : '');
+			$groupN = $be_group_Array[$data['row']['perms_groupid']] ? $be_group_Array[$data['row']['perms_groupid']]['title'] : ($data['row']['perms_groupid'] ? '<i>[' . $data['row']['perms_groupid'] . ']!</i>' : '');
+			$groupN = GeneralUtility::fixed_lgd_cs($groupN, 20);
+
+			// Seeing if editing of permissions are allowed for that page:
+			$editPermsAllowed = ($data['row']['perms_userid'] == $GLOBALS['BE_USER']->user['uid'] || $GLOBALS['BE_USER']->isAdmin());
+
+			// First column:
+			$cells[] = '
+					<td align="left" nowrap="nowrap"' . $bgCol . $this->generateTitleAttribute($data['row']['uid'], $be_user_Array, $be_group_Array) . '>' . $data['HTML'] . htmlspecialchars(GeneralUtility::fixed_lgd_cs($data['row']['title'], $tLen)) . '&nbsp;</td>';
+
+			// "Edit permissions" -icon
+			if ($editPermsAllowed && $data['row']['uid']) {
+				$aHref = 'index.php?mode=' . $this->MOD_SETTINGS['mode'] . '&depth=' . $this->MOD_SETTINGS['depth'] . '&id=' . $data['row']['uid'] . '&return_id=' . $this->id . '&edit=1';
+				$cells[] = '
+					<td' . $bgCol . '><a href="' . htmlspecialchars($aHref) . '"><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/edit2.gif', 'width="11" height="12"') . ' border="0" title="' . $GLOBALS['LANG']->getLL('ch_permissions', 1) . '" align="top" alt="" /></a></td>';
+			} else {
+				$cells[] = '
+					<td' . $bgCol . '></td>';
+			}
+
+			// Rest of columns (depending on mode)
+			if ($this->MOD_SETTINGS['mode'] == 'perms') {
+				if (!$disableOldPermissionSystem) {
+					$cells[] = '
+						<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+						<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['uid'] ? $this->printPerms($data['row']['perms_user']) . ' ' . $userN : '') . '</td>
+
+						<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+						<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['uid'] ? $this->printPerms($data['row']['perms_group']) . ' ' . $groupN : '') . '</td>
+
+						<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+						<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['uid'] ? ' ' . $this->printPerms($data['row']['perms_everybody']) : '') . '</td>';
+				}
+
+				// ACL rows
+				if (!empty($aclUsers)) {
+					$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td><td' . $bgCol . '>' . $this->countAcls($this->aclList[$data['row']['uid']][0]) . '</td>';
+					foreach ($aclUsers as $uid) {
+						$tmpBg = $bgCol;
+						if (isset($this->aclList[$data['row']['uid']][0][$uid]['newAcl'])) {
+							if ($this->aclList[$data['row']['uid']][0][$uid]['recursive']) {
+								$tmpBg = ' class="bgColor5"';
+							} else {
+								$tmpBg = ' class="bgColor6"';
+							}
+						}
+
+						$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+						<td' . $tmpBg . ' nowrap="nowrap">' . ($data['row']['uid'] ? ' ' . $this->printPerms($this->aclList[$data['row']['uid']][0][$uid]['permissions']) : '') . '</td>';
+					}
+				}
+				if (!empty($aclGroups)) {
+					$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td><td' . $bgCol . '>' . $this->countAcls($this->aclList[$data['row']['uid']][1]) . '</td>';
+					foreach ($aclGroups as $uid) {
+						$tmpBg = $bgCol;
+						if (isset($this->aclList[$data['row']['uid']][1][$uid]['newAcl'])) {
+							if ($this->aclList[$data['row']['uid']][1][$uid]['recursive']) {
+								$tmpBg = ' class="bgColor5"';
+							} else {
+								$tmpBg = ' class="bgColor6"';
+							}
+						}
+						$cells[] = '<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+						<td' . $tmpBg . ' nowrap="nowrap">' . ($data['row']['uid'] ? ' ' . $this->printPerms($this->aclList[$data['row']['uid']][1][$uid]['permissions']) : '') . '</td>';
+					}
+				}
+
+			} else {
+				$cells[] = '
+					<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>';
+
+				if ($GLOBALS['BE_USER']->user['uid'] == $data['row']['perms_userid']) {
+					$bgCol = ' class="bgColor-20"';
+				} else {
+					$bgCol = $lE_bgCol;
+				}
+				$cells[] = '
+					<td' . $bgCol . ' nowrap="nowrap" align="center">' . ($data['row']['uid'] ? $owner . $this->printPerms($GLOBALS['BE_USER']->calcPerms($data['row'])) : '') . '</td>
+					' . (!$GLOBALS['BE_USER']->isAdmin() ? '
+					<td' . $bgCol . '><img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/line.gif', 'width="5" height="16"') . ' alt="" /></td>
+					<td' . $bgCol . ' nowrap="nowrap">' . ($data['row']['editlock'] ? '<img' . IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/recordlock_warning2.gif', 'width="22" height="16"') . ' title="' . $GLOBALS['LANG']->getLL('EditLock_descr', 1) . '" alt="" />' : '') . '</td>
+					' : '');
+				$bgCol = $lE_bgCol;
+			}
+
+			// Compile table row:
+			$this->code .= '
+				<tr>
+					' . implode('
+					', $cells) . '
+				</tr>';
+		}
+	}
+
+	protected function createLegendTable() {
+		$legendText = '<b>' . $GLOBALS['LANG']->getLL('1', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('1_t', 1);
+		$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('16', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('16_t', 1);
+		$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('2', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('2_t', 1);
+		$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('4', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('4_t', 1);
+		$legendText .= '<br /><b>' . $GLOBALS['LANG']->getLL('8', 1) . '</b>: ' . $GLOBALS['LANG']->getLL('8_t', 1);
+
+		$this->code = '<table border="0" id="typo3-legendTable">
+			<tr>
+			<td valign="top"><img' . \TYPO3\CMS\Backend\Utility\IconUtility::skinImg($GLOBALS['BACK_PATH'], 'gfx/legend.gif', 'width="86" height="75"') . ' alt="" /></td>
+				<td valign="top" nowrap="nowrap">' . $legendText . '</td>
+			</tr>
+		</table>';
+		$this->code .= '<br />' . $GLOBALS['LANG']->getLL('def', 1);
+		$this->code .= '<br /><br /><span class="perm-allowed">*</span>: ' . $GLOBALS['LANG']->getLL('A_Granted', 1);
+		$this->code .= '<br /><span class="perm-denied">x</span>: ' . $GLOBALS['LANG']->getLL('A_Denied', 1);
 	}
 
 }
